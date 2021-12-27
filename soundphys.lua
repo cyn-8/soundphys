@@ -2,15 +2,13 @@
 	
 	module by cyn_8
 	
-	documentation: 
+	github / documentation: https://github.com/cyn-8/soundphys
 	
 ]]
 
 
 
-
-
---[[ script settings ]]
+--[[ settings ]]
 
 local settings = {
 	options = {
@@ -57,8 +55,6 @@ local settings = {
 		falloff_scale = {80, 20, 5} -- high, mid, low
 	}
 }
-
-
 
 
 
@@ -179,235 +175,172 @@ local function remove_sound_table(sound)
 	end
 end
 
-
-
-
-
---[[ module ]]
-
 local soundphys = {
-	sound_tables = {
-		add = function(sounds, base_eq) -- soundphys.sound_tables.remove(sounds, base_eq)
-			--[[
-				sounds: {sound, ...}
-				base_eq: {high, mid, low}
-			]]
-			
-			if not settings.enabled[1] then
-				for _, sound in pairs(sounds) do
-					setup_sound_table(sound, base_eq)
-				end
-			end
-		end,
-		
-		remove = function(sounds) -- soundphys.sound_tables.remove(sounds)
-			--[[
-				sounds: {sound, ...}
-			]]
-			
-			if not settings.enabled[1] then
-				for _, sound in pairs(sounds) do
-					if sound:IsA("Sound") then
-						remove_sound_table(sound)
-					end
-				end
-			end
-		end
-	},
-	
-	water = {
-		add = function(baseparts, ignore) -- soundphys.water.add(baseparts, ignore)
-			--[[
-				baseparts: {basepart, ...}
-				ignore: {sound, ...}
-			]]
-			
-			if settings.enabled[3] then
-				for _, basepart in pairs(baseparts) do
-					if not water_areas[basepart] then
-						water_areas[basepart] = ignore
-					end
-				end
-			end
-		end,
-		
-		remove = function(baseparts) -- soundphys.water.remove(baseparts)
-			--[[
-				baseparts: {basepart, ...}
-			]]
-			
-			if settings.enabled[3] then
-				for _, basepart in pairs(baseparts) do
-					water_areas[basepart] = nil
-				end
-			end
-		end
-	},
-	
-	reverb = {
-		add = function(baseparts, values, ignore) -- soundphys.reverb.add(baseparts, values, ignore)
-			--[[
-				baseparts: {basepart, ...}
-				values: {decay, density, diffusion, dry gain, wet gain}
-				ignore: {sound, ...}
-			]]
-			
-			if settings.enabled[4] then
-				for _, basepart in pairs(baseparts) do
-					if not reverb_areas[basepart] then
-						reverb_areas[basepart] = {values, {}}
-						for _, sound in pairs(ignore) do
-							reverb_areas[basepart][2][sound] = true
-						end
-					end
-				end
-			end
-		end,
-		
-		remove = function(baseparts) -- soundphys.reverb.remove(baseparts)
-			--[[
-				baseparts: {basepart, ...}
-			]]
-			
-			if settings.enabled[4] then
-				for _, basepart in pairs(baseparts) do
-					reverb_areas[basepart] = nil
-				end
-			end
-		end
-	},
-	
-	ignore = {
-		autodetection = {
-			add = function(sounds) -- soundphys.ignore.autodetection.add(sounds)
-				--[[
-					sounds: {sound, ...}
-				]]
-				
-				if settings.enabled[1] then
+	autodetection = function(action, sounds)
+		if settings.enabled[1] then
+			local actions = {
+				["ignore_add"] = function()
 					for _, sound in pairs(sounds) do
 						if sound:isA("Sound") then
 							autodetection_ignore[sound] = true
 						end
 					end
-				end
-			end,
-			
-			remove = function(sounds) -- soundphys.ignore.autodetection.remove(sounds)
-				--[[
-					sounds: {sound, ...}
-				]]
+				end,
 				
-				if settings.enabled[1] then
+				["ignore_remove"] = function()
 					for _, sound in pairs(sounds) do
 						autodetection_ignore[sound] = nil
 					end
 				end
+			}
+			
+			if actions[action] then
+				actions[action]()
 			end
-		},
-		
-		obstruction = {
-			add = function(baseparts) -- soundphys.ignore.obstruction.add(baseparts)
-				--[[
-					baseparts: {basepart, ...}
-				]]
-				
-				if settings.enabled[2] then
+		end
+	end,
+	
+	obstruction = function(action, baseparts)
+		if settings.enabled[2] then
+			local actions = {
+				["ignore_add"] = function()
 					for _, basepart in pairs(baseparts) do
 						if not obstruction_ignore[basepart] then
 							obstruction_ignore[basepart] = true
 						end
 					end
-				end
-			end,
-			
-			remove = function(baseparts) -- soundphys.ignore.obstruction.remove(baseparts)
-				--[[
-					baseparts: {basepart, ...}
-				]]
+				end,
 				
-				if settings.enabled[2] then
+				["ignore_remove"] = function()
 					for _, basepart in pairs(baseparts) do
 						obstruction_ignore[basepart] = nil
 					end
 				end
+			}
+			
+			if actions[action] then
+				actions[action]()
 			end
-		},
-		
-		water = {
-			add = function(baseparts, sounds) -- soundphys.ignore.water.add(baseparts, sounds)
-				--[[
-					baseparts: {basepart, ...}
-					sounds_ignore: {sound, ...}
-				]]
+		end
+	end,
+	
+	sound_tables = function(action, sounds, data)
+		if not settings.enabled[1] then
+			local actions = {
+				["add"] = function()
+					for _, sound in pairs(sounds) do
+						setup_sound_table(sound, data)
+					end
+				end,
 				
-				if settings.enabled[3] then
+				["remove"] = function()
+					for _, sound in pairs(sounds) do
+						if sound:IsA("Sound") then
+							remove_sound_table(sound)
+						end
+					end
+				end
+			}
+			
+			if actions[action] then
+				actions[action]()
+			end
+		end
+		
+	end,
+	
+	water_areas = function(action, baseparts, data)
+		if settings.enabled[3] then
+			local actions = {
+				["add"] = function()
+					for _, basepart in pairs(baseparts) do
+						if not water_areas[basepart] then
+							water_areas[basepart] = data
+						end
+					end
+				end,
+				
+				["remove"] = function()
+					for _, basepart in pairs(baseparts) do
+						water_areas[basepart] = nil
+					end
+				end,
+				
+				["ignore_add"] = function()
 					for _, basepart in pairs(baseparts) do
 						if water_areas[basepart] then
-							for _, sound in pairs(sounds) do
+							for _, sound in pairs(data) do
 								water_areas[basepart][sound] = true 
 							end
 						end
 					end
-				end
-			end,
-			
-			remove = function(baseparts, sounds) -- soundphys.ignore.water.remove(baseparts, sounds)
-				--[[
-					baseparts: {basepart, ...}
-					sounds: {sound, ...}
-				]]
+				end,
 				
-				if settings.enabled[3] then
+				["ignore_remove"] = function()
 					for _, basepart in pairs(baseparts) do
 						if water_areas[basepart] then
-							for _, sound in pairs(sounds) do
+							for _, sound in pairs(data) do
 								water_areas[basepart][sound] = nil 
 							end
 						end
 					end
 				end
+			}
+			
+			if actions[action] then
+				actions[action]()
 			end
-		},
-		
-		reverb = {
-			add = function(baseparts, sounds) -- soundphys.ignore.reverb.add(baseparts, sounds)
-				--[[
-					baseparts: {basepart, ...}
-					sounds: {sound, ...}
-				]]
+		end
+	end,
+	
+	reverb_areas = function(action, baseparts, data)
+		if settings.enabled[4] then
+			local actions = {
+				["add"] = function()
+					for _, basepart in pairs(baseparts) do
+						if not reverb_areas[basepart] then
+							reverb_areas[basepart] = {data[1], {}}
+							for _, sound in pairs(data[2]) do
+								reverb_areas[basepart][2][sound] = true
+							end
+						end
+					end
+				end,
 				
-				if settings.enabled[4] then
+				["remove"] = function()
+					for _, basepart in pairs(baseparts) do
+						reverb_areas[basepart] = nil
+					end
+				end,
+				
+				["ignore_add"] = function()
 					for _, basepart in pairs(baseparts) do
 						if reverb_areas[basepart] then
-							for _, sound in pairs(sounds) do
+							for _, sound in pairs(data) do
 								reverb_areas[basepart][2][sound] = true 
 							end
 						end
 					end
-				end
-			end,
-			
-			remove = function(baseparts, sounds) -- soundphys.ignore.reverb.remove(baseparts, sounds)
-				--[[
-					baseparts: {basepart, ...}
-					sounds: {sound, ...}
-				]]
+				end,
 				
-				if settings.enabled[4] then
+				["ignore_remove"] = function()
 					for _, basepart in pairs(baseparts) do
 						if reverb_areas[basepart] then
-							for _, sound in pairs(sounds) do
+							for _, sound in pairs(data) do
 								reverb_areas[basepart][2][sound] = nil 
 							end
 						end
 					end
 				end
+			}
+			
+			if actions[action] then
+				actions[action]()
 			end
-		}
-	},
+		end
+	end,
 	
-	run = function() -- soundphys.run()
+	run = function()
 		if not running then
 			running = true
 			
@@ -697,7 +630,7 @@ local soundphys = {
 		end
 	end,
 	
-	stop = function() -- soundphys.stop()
+	stop = function()
 		if running then
 			running = false
 			
