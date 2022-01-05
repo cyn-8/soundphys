@@ -29,8 +29,8 @@ local settings = {
 	enabled = {
 		true, -- autodetection
 		true, -- obstruction
-		true, -- water
-		true, -- reverb
+		true, -- water areas
+		true, -- reverb areas
 		true -- distance falloff
 	},
 		
@@ -39,7 +39,7 @@ local settings = {
 		
 		default = {
 			eq = {0, 0, 0}, -- high, mid, low
-			reverb = {0, 0, 0, 0, -80} -- decay, density, diffusion, dry gain, wet gain
+			reverb = {0.1, 0, 0, 0, -80} -- decay, density, diffusion, dry gain, wet gain
 		},
 		
 		obstruction = {12, 6, 3}, -- high, mid, low
