@@ -17,7 +17,7 @@ it contains 5 features:
 <br>
 <br>
 
-[devforum post]()
+[devforum post](https://devforum.roblox.com/t/soundphys-module/1615696/1)
 
 [roblox asset](https://www.roblox.com/library/8371117554)
 
@@ -30,9 +30,11 @@ it contains 5 features:
 ## things to remember
 
 * localscript should be placed in starterplayerscripts to work as intended
+* autodetection ignore list should be managed when the module is not running
+	* because autodetection is connected to instance creation, if the module is running when a sound is created, then by the time it is added to the ignore list, a sound table for it will likely have already been made
 * sounds cannot be added if they are not parented to a basepart or attachment
 * starts to lag at about 5000 raycasts per second (# of active sounds × refresh rate)
-  * sounds are not "active" when past max distance or when not playing
+	* sounds are not "active" when past max distance or when not playing
 
 <br>
 
